@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button, TextField } from "@mui/material";
 import ListTile from "@/components/ListTile"
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
@@ -237,20 +236,6 @@ export default function TodoListsPage() {
 
     return (
         <Container>
-{/*         <h1>Todo Lists</h1>
-
-            <div style={{ display: "flex", gap: 12, marginBottom: 24 }}>
-                <TextField
-                    label="New list"
-                    value={value}
-                    onChange={(e) => setValue(e.target.value)}
-                />
-
-                <Button variant="contained" onClick={createList}>
-                    Add
-                </Button>
-            </div>
- */}
             <TodoListHeader 
                 value={value}
                 setValue={setValue}

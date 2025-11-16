@@ -34,7 +34,7 @@ export interface DeleteItemPayload {
   id: number;
 }
 
-type PendingPayload =
+export type PendingPayload =
   | AddListPayload
   | UpdateListPayload
   | DeleteListPayload
@@ -42,7 +42,7 @@ type PendingPayload =
   | UpdateItemPayload
   | DeleteItemPayload;
 
-interface PendingRequest {
+export interface PendingRequest {
   type:
   | "ADD_ITEM"
   | "DELETE_ITEM"
@@ -53,7 +53,8 @@ interface PendingRequest {
   payload: PendingPayload;
   queueId?: string;
 }
-interface SyncState {
+
+export interface SyncState {
   queue: PendingRequest[];
 }
 

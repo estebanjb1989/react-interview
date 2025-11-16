@@ -32,8 +32,6 @@ export const processSyncQueue = createAsyncThunk(
         let state = getState() as RootState;
         let queue = state.sync.queue;
 
-        console.log("Processing queue:", queue);
-
         for (const request of queue) {
             const { type } = request;
             if (!["ADD_LIST", "UPDATE_LIST", "DELETE_LIST"].includes(type)) {
