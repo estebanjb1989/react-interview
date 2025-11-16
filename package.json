@@ -10,13 +10,29 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^7.3.5",
+    "@mui/material": "^7.3.5",
+    "@reduxjs/toolkit": "^2.10.1",
+    "@tanstack/react-virtual": "^3.13.12",
+    "@types/redux-logger": "^3.0.13",
+    "immer": "^10.2.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-redux": "^9.2.0",
+    "react-router-dom": "^7.9.6",
+    "redux-logger": "^3.0.6",
+    "redux-persist": "^6.0.0",
+    "styled-components": "^6.1.19"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
+    "@types/node": "^24.10.1",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
+    "@types/redux-persist": "^4.3.1",
+    "@types/styled-components": "^5.1.35",
     "@vitejs/plugin-react-swc": "^3.8.0",
     "eslint": "^9.21.0",
     "eslint-plugin-react-hooks": "^5.1.0",
