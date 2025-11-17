@@ -3,13 +3,13 @@ import { RootState } from "../index";
 
 import { todoApi, todoItemsApi } from "@/store/api/index";
 
-import { 
+import {
     conciliateIds,
     updateListLocal,
     removeListLocal
 } from "@/store/slices/todoListsSlice";
 
-import { 
+import {
     conciliateItemIds,
     removeItemLocal,
     addItemLocal
@@ -99,7 +99,7 @@ export const processSyncQueue = createAsyncThunk(
 
         state = getState() as RootState;
         queue = state.sync.queue;
-
+        /* ITEMS */
 
         for (const request of queue) {
             const { type } = request;
@@ -157,15 +157,45 @@ export const processSyncQueue = createAsyncThunk(
                     case "DELETE_ITEM": {
                         const { listId, id } = request.payload as DeleteItemPayload;
 
-                        await dispatch(
-                            todoItemsApi.endpoints.deleteTodoItem.initiate({
-                                listId,
-                                itemId: id
-                            })
-                        ).unwrap();
+                        try {
+                            await dispatch(
+                                todoItemsApi.endpoints.deleteTodoItem.initiate({
+                                    listId,
+                                    itemId: id
+                                })
+                            ).unwrap();
 
-                        dispatch(removeItemLocal({ listId, itemId: id }));
-                        dispatch(dequeueRequest(request));
+                            dispatch(removeItemLocal({ listId, itemId: id }));
+                            dispatch(dequeueRequest(request));
+
+                        } catch (err: unknown) {
+                            if (typeof err === "object" && err !== null && "status" in err) {
+                                const status = (err as { status: number }).status;
+                                if (!status || status !== 404) {
+                                    console.warn("DELETE_ITEM error, keeping pending", err);
+                                    break;
+                                }
+                            }
+
+                            const stateAfter404 = getState() as RootState;
+                            const listStillExists = stateAfter404.todoLists.lists.some(
+                                l => l.id === listId
+                            );
+
+                            if (!listStillExists) {
+                                dispatch(removeItemLocal({ listId, itemId: id }));
+
+                                const fullQueue = stateAfter404.sync.queue;
+                                fullQueue
+                                    .filter(req => "listId" in req.payload && req.payload?.listId === listId)
+                                    .forEach(req => dispatch(dequeueRequest(req)));
+
+                                break;
+                            }
+
+                            dispatch(removeItemLocal({ listId, itemId: id }));
+                            dispatch(dequeueRequest(request));
+                        }
                         break;
                     }
                 }

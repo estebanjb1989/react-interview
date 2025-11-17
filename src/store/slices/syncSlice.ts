@@ -110,12 +110,28 @@ export const syncSlice = createSlice({
         (req) =>
           !(
             req.type === "ADD_ITEM" &&
-            "listId" in req.payload &&   // ← type guard
+            "listId" in req.payload &&
             req.payload.listId === action.payload.listId &&
             req.payload.id === action.payload.id
           )
       );
     },
+
+    removeQueuedUpdateItem: (
+      state,
+      action: PayloadAction<{ listId: number; id: number }>
+    ) => {
+      state.queue = state.queue.filter(
+        (req) =>
+          !(
+            req.type === "UPDATE_ITEM" &&
+            "listId" in req.payload &&
+            req.payload.listId === action.payload.listId &&
+            req.payload.id === action.payload.id
+          )
+      );
+    },
+
 
     updateQueuedAddListName: (
       state,
@@ -135,47 +151,94 @@ export const syncSlice = createSlice({
       });
     },
 
+    updateQueuedUpdateList: (
+      state,
+      action: PayloadAction<{ id: number; name: string }>
+    ) => {
+      const { id, name } = action.payload;
+
+      const req = state.queue.find(
+        (r) => r.type === "UPDATE_LIST" && r.payload.id === id
+      );
+
+      if (req && "name" in req.payload) {
+        req.payload.name = name;
+      }
+    },
+
     updateQueuedAddItem: (
       state,
-      action: PayloadAction<{ listId: number; id: number; completed: boolean }>
+      action: PayloadAction<{ listId: number; id: number; completed: boolean, description: string }>
     ) => {
-      const { listId, id, completed } = action.payload;
+      const { listId, id, completed, description } = action.payload;
 
       const req = state.queue.find(
         (r) =>
           r.type === "ADD_ITEM" &&
           "listId" in r.payload &&  // ← type guard
-          "id" in r.payload &&      // ← type guard
+          "id" in r.payload &&      
           r.payload.listId === listId &&
           r.payload.id === id
       );
 
-      if (req && "completed" in req.payload) {  // ← otro guard
+      if (req && "completed" in req.payload) {
         req.payload.completed = completed;
+      }
+
+
+      if (req && "description" in req.payload) {
+        req.payload.description = description;
       }
     },
 
+    removeQueuedDeleteList: (
+      state,
+      action: PayloadAction<{ id: number }>
+    ) => {
+      const { id } = action.payload;
+
+      state.queue = state.queue.filter(
+        (req) =>
+          !(req.type === "DELETE_LIST" && req.payload.id === id)
+      );
+    },
 
     updateQueuedUpdateItem: (
       state,
-      action: PayloadAction<{ listId: number; id: number; completed: boolean }>
+      action: PayloadAction<{ listId: number; id: number; completed: boolean, description: string }>
     ) => {
-      const { listId, id, completed } = action.payload;
+      const { listId, id, completed, description } = action.payload;
 
       const req = state.queue.find(
         (r) =>
           r.type === "UPDATE_ITEM" &&
-          "listId" in r.payload &&   // type guard
-          "id" in r.payload &&       // type guard
+          "listId" in r.payload &&
+          "id" in r.payload &&
           r.payload.listId === listId &&
           r.payload.id === id
       );
 
-      if (req && "completed" in req.payload) {  // type guard
+      if (req && "completed" in req.payload) {
         req.payload.completed = completed;
+      }
+
+      if (req && "description" in req.payload) {
+        req.payload.description = description;
       }
     },
 
+    removeQueuedUpdateList: (
+      state,
+      action: PayloadAction<{ id: number }>
+    ) => {
+      state.queue = state.queue.filter(
+        (req) =>
+          !(
+            req.type === "UPDATE_LIST" &&
+            req.payload.id === action.payload.id
+          )
+      );
+    },
 
     removeQueuedDeleteItem: (
       state,
@@ -184,8 +247,8 @@ export const syncSlice = createSlice({
       state.queue = state.queue.filter((req) => {
         if (
           req.type === "DELETE_ITEM" &&
-          "listId" in req.payload &&      
-          "id" in req.payload             
+          "listId" in req.payload &&
+          "id" in req.payload
         ) {
           return !(
             req.payload.listId === action.payload.listId &&
@@ -236,12 +299,16 @@ export const {
   enqueueRequest,
   clearQueue,
   removeQueuedAddItem,
+  removeQueuedUpdateItem,
   clearQueueForList,
   updateQueuedAddListName,
   updateQueuedAddItem,
   updateQueuedUpdateItem,
   removeQueuedDeleteItem,
   dequeueRequest,
-  updateQueueListId
+  updateQueueListId,
+  removeQueuedUpdateList,
+  updateQueuedUpdateList,
+  removeQueuedDeleteList
 } = syncSlice.actions;
 export default syncSlice.reducer;

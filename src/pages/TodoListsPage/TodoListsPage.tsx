@@ -15,7 +15,14 @@ import {
     useGetTodoListsQuery,
     useUpdateListMutation
 } from "@/store/api/todoApi";
-import { enqueueRequest, clearQueueForList, updateQueuedAddListName } from "@/store/slices/syncSlice";
+import {
+    enqueueRequest,
+    clearQueueForList,
+    updateQueuedAddListName,
+    removeQueuedUpdateList,
+    updateQueuedUpdateList,
+    removeQueuedDeleteList
+} from "@/store/slices/syncSlice";
 
 import { TodoList } from "@/types/TodoList";
 
@@ -62,7 +69,7 @@ export default function TodoListsPage() {
         isLoading,
         lists,
         dispatch,
-        prevServer, // importante
+        prevServer,
     ]);
 
     const startEditing = (list: TodoList) => {
@@ -73,13 +80,13 @@ export default function TodoListsPage() {
     const saveEditing = async () => {
         if (!editingId) return;
 
-        const trimmed = editingValue?.trim()
+        const trimmed = editingValue?.trim();
         if (!trimmed) {
             cancelEditing();
             return;
         }
 
-        const id = editingId
+        const id = editingId;
 
         dispatch(updateListLocal({ id, name: trimmed, dirty: true }));
 
@@ -112,18 +119,54 @@ export default function TodoListsPage() {
                     if (hasPendingAdd || isLocalId) {
                         dispatch(
                             updateQueuedAddListName({
-                                id: id,
+                                id,
                                 name: trimmed,
                             })
                         );
-                    } else {
+                        return;
+                    }
+
+                    const pendingUpdate = queue.find(
+                        (req) =>
+                            req.type === "UPDATE_LIST" &&
+                            req.payload.id === id
+                    );
+
+                    if (pendingUpdate) {
+                        dispatch(
+                            updateQueuedUpdateList({
+                                id,
+                                name: trimmed,
+                            })
+                        );
+                        return;
+                    }
+
+                    const pendingDelete = queue.find(
+                        (req) =>
+                            req.type === "DELETE_LIST" &&
+                            req.payload.id === id
+                    );
+
+                    if (pendingDelete) {
+                        dispatch(removeQueuedDeleteList({ id }));
+
                         dispatch(
                             enqueueRequest({
                                 type: "UPDATE_LIST",
                                 payload: { id, name: trimmed },
                             })
                         );
+
+                        return;
                     }
+
+                    dispatch(
+                        enqueueRequest({
+                            type: "UPDATE_LIST",
+                            payload: { id, name: trimmed },
+                        })
+                    );
 
                     return;
                 }
@@ -132,6 +175,7 @@ export default function TodoListsPage() {
             console.error("Unexpected app error (update list):", err);
         }
     };
+
 
     const cancelEditing = () => {
         setEditingId(null);
@@ -197,6 +241,13 @@ export default function TodoListsPage() {
             return;
         }
 
+        const pendingUpdate = queue.find(
+            (req) => req.type === "UPDATE_LIST" && req.payload.id === id
+        );
+        if (pendingUpdate) {
+            dispatch(removeQueuedUpdateList({ id }));
+        }
+
         try {
             await deleteList(id).unwrap();
 
@@ -236,7 +287,7 @@ export default function TodoListsPage() {
 
     return (
         <Container>
-            <TodoListHeader 
+            <TodoListHeader
                 value={value}
                 setValue={setValue}
                 createList={createList}

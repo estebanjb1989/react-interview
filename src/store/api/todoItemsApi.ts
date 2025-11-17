@@ -13,6 +13,20 @@ export const todoItemsApi = createApi({
   endpoints: (builder) => ({
     getTodoItems: builder.query<TodoItem[], number>({
       query: (listId) => `/todolists/${listId}/todos`,
+      providesTags: (result, error, listId) => [
+        { type: "TodoItems", id: listId }
+      ]
+    }),
+
+    toggleCompleteAsync: builder.mutation<void, { listId: number; completed: boolean }>({
+      query: ({ listId, completed }) => ({
+        url: `/todolists/${listId}/toggle-complete-async`,
+        method: "PUT",
+        body: { completed },
+      }),
+      invalidatesTags: (result, error, { listId }) => [
+        { type: "TodoItems", id: listId },
+      ],
     }),
 
     addTodoItem: builder.mutation<TodoItem, { listId: number; description: string, completed: boolean }>({
@@ -21,6 +35,9 @@ export const todoItemsApi = createApi({
         method: "POST",
         body: { description, completed },
       }),
+      invalidatesTags: (result, error, { listId }) => [
+        { type: "TodoItems", id: listId },
+      ],
     }),
 
     deleteTodoItem: builder.mutation<{ ok: boolean }, { listId: number; itemId: number }>({
@@ -28,6 +45,9 @@ export const todoItemsApi = createApi({
         url: `/todolists/${listId}/todos/${itemId}`,
         method: "DELETE",
       }),
+      invalidatesTags: (result, error, { listId }) => [
+        { type: "TodoItems", id: listId },
+      ],
     }),
 
     updateTodoItem: builder.mutation<TodoItem, { listId: number; itemId: number; completed: boolean; description: string }>({
@@ -36,6 +56,9 @@ export const todoItemsApi = createApi({
         method: "PUT",
         body: { completed, description },
       }),
+      invalidatesTags: (result, error, { listId }) => [
+        { type: "TodoItems", id: listId },
+      ],
     }),
   }),
 });
@@ -44,5 +67,6 @@ export const {
   useGetTodoItemsQuery,
   useAddTodoItemMutation,
   useDeleteTodoItemMutation,
-  useUpdateTodoItemMutation
+  useUpdateTodoItemMutation,
+  useToggleCompleteAsyncMutation,
 } = todoItemsApi;

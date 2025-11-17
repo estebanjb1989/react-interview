@@ -43,17 +43,11 @@ export const IconCircle = styled.div<{ dark: boolean }>`
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  transition: all 0.25s ease;
 
   background: ${({ dark }) =>
     dark
       ? "linear-gradient(135deg, #111 0%, #333 100%)"
       : "linear-gradient(135deg, #fff 0%, #ddd 100%)"};
-
-  box-shadow: ${({ dark }) =>
-    dark
-      ? "inset 1px 1px 4px rgba(255,255,255,0.1), inset -2px -2px 6px rgba(0,0,0,0.4)"
-      : "inset 2px 2px 6px rgba(0,0,0,0.1), inset -2px -2px 5px rgba(255,255,255,0.7)"};
 `;
 
 export const FloatingSync = styled.div<{ pending: number }>`
