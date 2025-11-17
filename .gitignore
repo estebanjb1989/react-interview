@@ -24,3 +24,11 @@ dist-ssr
 *.sw?
 
 .env
+
+# Ignore compiled JS when a TS file with the same name exists
+*.js
+!*.ts
+!*.d.ts
+
+# Ignore JS maps
+*.js.map

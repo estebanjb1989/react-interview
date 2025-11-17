@@ -18,7 +18,7 @@ export const todoItemsSlice = createSlice({
 
     updateItemLocal: (
       _,
-      action: PayloadAction<{ listId: number; itemId: number; description: string }>
+      action: PayloadAction<{ listId: number; itemId: number; description: string, completed: boolean }>
     ) => action,
 
     removeItemLocal: (
@@ -57,16 +57,8 @@ type ItemsDraft = {
   };
 };
 
-type ItemsAction =
-  | ReturnType<typeof addItemLocal>
-  | ReturnType<typeof toggleItemLocal>
-  | ReturnType<typeof updateItemLocal>
-  | ReturnType<typeof removeItemLocal>
-  | ReturnType<typeof conciliateItemIds>
-  | ReturnType<typeof setItemsFetched>;
-
 export const itemsReducerHOF = produce(
-  (draft: ItemsDraft, action: ItemsAction) => {
+  (draft: ItemsDraft, action: unknown) => {
     if (addItemLocal.match(action)) {
       const { id, listId, description } = action.payload;
 
@@ -130,13 +122,16 @@ export const itemsReducerHOF = produce(
     }
 
     if (updateItemLocal.match(action)) {
-      const { listId, itemId, description } = action.payload;
+      const { listId, itemId, description, completed } = action.payload;
 
       const list = draft.todoLists?.lists?.find((list: TodoList) => list.id === listId);
       if (!list) return;
 
       const item = list.todos.find((todo: TodoItem) => todo.id === itemId);
-      if (item) item.description = description;
+      if (item) {
+        item.description = description;
+        item.completed = completed
+      }
     }
   }
 );

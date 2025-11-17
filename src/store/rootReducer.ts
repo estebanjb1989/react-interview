@@ -17,9 +17,10 @@ const combined = combineReducers({
 export type CombinedState = ReturnType<typeof combined>;
 
 export default function rootReducer(
-  state: CombinedState | undefined,
+  state: CombinedState = combined(undefined, { type: "@@INIT" }),
   action: UnknownAction
 ): CombinedState {
+
   const nextState = itemsReducerHOF(state, action);
 
   return combined(nextState, action);

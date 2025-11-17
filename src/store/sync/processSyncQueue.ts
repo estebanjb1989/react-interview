@@ -6,25 +6,28 @@ import { todoApi, todoItemsApi } from "@/store/api/index";
 import {
     conciliateIds,
     updateListLocal,
-    removeListLocal
+    removeListLocal,
 } from "@/store/slices/todoListsSlice";
 
 import {
     conciliateItemIds,
     removeItemLocal,
-    addItemLocal
+    addItemLocal,
 } from "@/store/slices/todoItemsSlice";
 
 import {
+    dequeueRequest,
+    updateQueueListId
+} from "@/store/slices/syncSlice"
+
+import {
+    AddListPayload,
     AddItemPayload,
     DeleteItemPayload,
-    dequeueRequest,
     UpdateItemPayload,
     UpdateListPayload,
-    updateQueueListId
-} from "@/store/slices/syncSlice";
 
-import { AddListPayload } from "@/store/slices/syncSlice";
+} from "@/store/slices/sync/types";
 
 export const processSyncQueue = createAsyncThunk(
     "sync/process",
@@ -150,7 +153,7 @@ export const processSyncQueue = createAsyncThunk(
                             completed: updated.completed
                         }));
 
-                        dispatch(dequeueRequest(request));
+                        dispatch(dequeueRequest({ queueId: request.queueId }));
                         break;
                     }
 
@@ -166,7 +169,7 @@ export const processSyncQueue = createAsyncThunk(
                             ).unwrap();
 
                             dispatch(removeItemLocal({ listId, itemId: id }));
-                            dispatch(dequeueRequest(request));
+                            dispatch(dequeueRequest({ queueId: request.queueId }));
 
                         } catch (err: unknown) {
                             if (typeof err === "object" && err !== null && "status" in err) {
@@ -187,14 +190,14 @@ export const processSyncQueue = createAsyncThunk(
 
                                 const fullQueue = stateAfter404.sync.queue;
                                 fullQueue
-                                    .filter(req => "listId" in req.payload && req.payload?.listId === listId)
-                                    .forEach(req => dispatch(dequeueRequest(req)));
+                                    .filter(request => "listId" in request.payload && request.payload?.listId === listId)
+                                    .forEach(request => dispatch(dequeueRequest({ queueId: request.queueId })));
 
                                 break;
                             }
 
                             dispatch(removeItemLocal({ listId, itemId: id }));
-                            dispatch(dequeueRequest(request));
+                            dispatch(dequeueRequest({ queueId: request.queueId }));
                         }
                         break;
                     }

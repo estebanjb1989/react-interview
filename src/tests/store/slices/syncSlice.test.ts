@@ -14,7 +14,7 @@ import reducer, {
 import type {
   SyncState,
   PendingRequest
-} from "@/store/slices/syncSlice";
+} from "@/store/slices/sync/types";
 
 const makeAddList = (id: number, name: string): PendingRequest => ({
   type: "ADD_LIST",
@@ -34,10 +34,11 @@ const makeAddItem = (
 const makeUpdateItem = (
   listId: number,
   id: number,
-  completed = false
+  completed?: boolean,
+  description?: string
 ): PendingRequest => ({
   type: "UPDATE_ITEM",
-  payload: { listId, id, completed, description: "" }
+  payload: { listId, id, completed, description: description }
 });
 
 const makeDeleteItem = (listId: number, id: number): PendingRequest => ({
@@ -77,7 +78,9 @@ describe("syncSlice", () => {
     ]);
 
     const result = reducer(state, clearQueueForList({ listId: 1 }));
-
+    console.log({
+      result: JSON.stringify(result, null, 2)
+    })
     expect(result.queue.length).toBe(2);
 
     const r0 = result.queue[0];
@@ -129,30 +132,36 @@ describe("syncSlice", () => {
 
     const result = reducer(
       state,
-      updateQueuedAddItem({ listId: 1, id: 10, completed: true })
+      updateQueuedAddItem({ listId: 1, id: 10, completed: true, description: "Test" })
     );
 
     const req = result.queue[0];
     expect(req.type).toBe("ADD_ITEM");
 
-    if (req.type === "ADD_ITEM" && "completed" in req.payload)  {
+    if (req.type === "ADD_ITEM" && "completed" in req.payload) {
       expect(req.payload.completed).toBe(true);
     }
   });
 
   it("updateQueuedUpdateItem updates completed in UPDATE_ITEM", () => {
-    const state = wrap([makeUpdateItem(1, 10, false)]);
+    const state = wrap([makeUpdateItem(1, 10, false, "Old description")]);
 
     const result = reducer(
       state,
-      updateQueuedUpdateItem({ listId: 1, id: 10, completed: true })
+      updateQueuedUpdateItem({
+        listId: 1,
+        id: 10,
+        completed: true,
+        description: "New description"
+      })
     );
 
     const req = result.queue[0];
     expect(req.type).toBe("UPDATE_ITEM");
 
-    if (req.type === "UPDATE_ITEM" && "completed" in req.payload) {
+    if (req.type === "UPDATE_ITEM" && "completed" in req.payload && "description" in req.payload) {
       expect(req.payload.completed).toBe(true);
+      expect(req.payload.description).toBe("New description");
     }
   });
 

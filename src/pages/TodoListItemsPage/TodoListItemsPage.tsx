@@ -365,7 +365,8 @@ export default function TodoListItemsPage() {
       dispatch(updateItemLocal({
         listId: numericId,
         itemId: editingId,
-        description: trimmed
+        description: trimmed,
+        completed: item.completed
       }));
 
       return;
@@ -394,6 +395,7 @@ export default function TodoListItemsPage() {
           listId: numericId,
           itemId: todoId,
           description: trimmed,
+          completed: item.completed
         })
       );
 
@@ -411,7 +413,8 @@ export default function TodoListItemsPage() {
       dispatch(updateItemLocal({
         listId: numericId,
         itemId: editingId,
-        description: trimmed
+        description: trimmed,
+        completed: item.completed
       }));
 
     } catch (err: unknown) {
@@ -431,8 +434,8 @@ export default function TodoListItemsPage() {
       );
 
       dispatch(
-        addItemLocal({
-          id: todoId,
+        updateItemLocal({
+          itemId: todoId,
           listId: numericId,
           description: trimmed,
           completed: item.completed,
@@ -440,6 +443,174 @@ export default function TodoListItemsPage() {
       );
     }
   };
+
+  const completeAllAsync = async ({ completed }: { completed: boolean }) => {
+    if (!todos || todos.length === 0) return;
+
+    const newCompleted = completed;
+
+    try {
+      await toggleCompleteAll({
+        listId: numericId,
+        completed: newCompleted
+      }).unwrap();
+
+      todos.forEach(todo => {
+        dispatch(
+          updateItemLocal({
+            listId: numericId,
+            itemId: todo.id,
+            description: todo.description,
+            completed: newCompleted
+          })
+        );
+      });
+
+      return;
+    } catch {
+
+      todos.forEach(todo => {
+        const todoId = todo.id;
+
+        const pendingAdd = queue.find(
+          req =>
+            req.type === "ADD_ITEM" &&
+            "listId" in req.payload &&
+            req.payload.listId === numericId &&
+            req.payload.id === todoId
+        );
+
+        if (pendingAdd) {
+          dispatch(
+            updateQueuedAddItem({
+              listId: numericId,
+              id: todoId,
+              completed: newCompleted,
+              description: todo.description
+            })
+          );
+
+          dispatch(
+            updateItemLocal({
+              listId: numericId,
+              itemId: todoId,
+              description: todo.description,
+              completed: newCompleted
+            })
+          );
+
+          return;
+        }
+
+        const pendingUpdate = queue.find(
+          req =>
+            req.type === "UPDATE_ITEM" &&
+            "listId" in req.payload &&
+            req.payload.listId === numericId &&
+            req.payload.id === todoId
+        );
+
+        if (pendingUpdate) {
+          dispatch(
+            updateQueuedUpdateItem({
+              listId: numericId,
+              id: todoId,
+              completed: newCompleted,
+              description: todo.description
+            })
+          );
+
+          dispatch(
+            updateItemLocal({
+              listId: numericId,
+              itemId: todoId,
+              description: todo.description,
+              completed: newCompleted
+            })
+          );
+
+          return;
+        }
+
+        const pendingDelete = queue.find(
+          req =>
+            req.type === "DELETE_ITEM" &&
+            "listId" in req.payload &&
+            req.payload.listId === numericId &&
+            req.payload.id === todoId
+        );
+
+        const pendingAddForDelete = queue.find(
+          req =>
+            req.type === "ADD_ITEM" &&
+            "listId" in req.payload &&
+            req.payload.listId === numericId &&
+            req.payload.id === todoId
+        );
+
+        const pendingUpdateForDelete = queue.find(
+          req =>
+            req.type === "UPDATE_ITEM" &&
+            "listId" in req.payload &&
+            req.payload.listId === numericId &&
+            req.payload.id === todoId
+        );
+
+        if (pendingAddForDelete) {
+          dispatch(removeQueuedAddItem({ listId: numericId, id: todoId }));
+
+          dispatch(
+            updateItemLocal({
+              listId: numericId,
+              itemId: todoId,
+              description: todo.description,
+              completed: newCompleted
+            })
+          );
+
+          return;
+        }
+
+        if (pendingUpdateForDelete) {
+          dispatch(removeQueuedUpdateItem({ listId: numericId, id: todoId }));
+
+          dispatch(
+            enqueueRequest({
+              type: "DELETE_ITEM",
+              payload: { listId: numericId, id: todoId }
+            })
+          );
+
+          return;
+        }
+
+        if (pendingDelete) {
+          return;
+        }
+
+        dispatch(
+          updateItemLocal({
+            listId: numericId,
+            itemId: todoId,
+            description: todo.description,
+            completed: newCompleted
+          })
+        );
+
+        dispatch(
+          enqueueRequest({
+            type: "UPDATE_ITEM",
+            payload: {
+              listId: numericId,
+              id: todoId,
+              completed: newCompleted,
+              description: todo.description
+            }
+          })
+        );
+      });
+    };
+  }
 
   if (!todos) {
     navigate("/");
@@ -466,8 +637,7 @@ export default function TodoListItemsPage() {
       />
 
       {todos?.length > 0 ?
-        <Button onClick={() => toggleCompleteAll({
-          listId: Number(id),
+        <Button onClick={() => completeAllAsync({
           completed: !allCompleted
         })}>
           {allCompleted ? "Mark all as undone" : "Mark all as done"}

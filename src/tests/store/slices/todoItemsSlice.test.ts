@@ -158,10 +158,12 @@ describe("todoItemsSlice + itemsReducerHOF", () => {
       listId: 1,
       itemId: 10,
       description: "EDITED",
+      completed: state.todoLists.lists[0].todos[0].completed
     });
 
     const result = itemsReducerHOF(state, action);
 
+    expect(result.todoLists?.lists[0].todos[0].completed).toBe(false);
     expect(result.todoLists?.lists[0].todos[0].description).toBe("EDITED");
   });
 
@@ -172,6 +174,7 @@ describe("todoItemsSlice + itemsReducerHOF", () => {
       listId: 1,
       itemId: 999,
       description: "X",
+      completed: false
     });
 
     const result = itemsReducerHOF(state, action);
@@ -186,6 +189,7 @@ describe("todoItemsSlice + itemsReducerHOF", () => {
       listId: 999,
       itemId: 10,
       description: "X",
+      completed: false
     });
 
     const result = itemsReducerHOF(state, action);
