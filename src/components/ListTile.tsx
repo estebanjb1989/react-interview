@@ -1,3 +1,4 @@
+import React from "react";
 import { TextField, IconButton, Checkbox, InputAdornment } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
@@ -30,7 +31,7 @@ interface ListTileProps {
   pending?: boolean;
 }
 
-export default function ListTile({
+function ListTile({
   name,
   isEditing,
   editingValue,
@@ -97,7 +98,7 @@ export default function ListTile({
                     onClick={onEditSave}
                     size="small"
                   >
-                    <SaveIcon fontSize="small" />  {/* 👈 BOTÓN AGREGADO */}
+                    <SaveIcon fontSize="small" />
                   </IconButton>
                 </InputAdornment>
               ),
@@ -150,3 +151,5 @@ export default function ListTile({
     </div>
   );
 }
+
+export default React.memo(ListTile);
